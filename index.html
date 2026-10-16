@@ -411,13 +411,13 @@
       renderReview(res);
     } catch (e) {
       // Si la revisión falla, no bloqueamos al participante
-      renderReview(null);
+      renderReview(null, e.message);
     } finally {
       btn.disabled = false; btn.textContent = 'Revisar y continuar';
     }
   });
 
-  function renderReview(res) {
+  function renderReview(res, errMsg) {
     const list = $('reviewList');
     list.innerHTML = '';
     const items = [
@@ -427,7 +427,8 @@
     ];
     let anyWarn = false;
     if (!res) {
-      list.innerHTML = '<div class="check warn"><span class="ico">!</span><div><strong>No pude revisar tu plan ahora</strong><p>Puedes continuar igualmente con la práctica.</p></div></div>';
+      list.innerHTML = '<div class="check warn"><span class="ico">!</span><div><strong>No pude revisar tu plan ahora</strong><p>Puedes continuar igualmente con la práctica.</p><p class="tech"></p></div></div>';
+      list.querySelector('.tech').textContent = 'Detalle técnico: ' + (errMsg || 'desconocido');
     } else {
       items.forEach(([key, title, okText]) => {
         const r = res[key] || {};
