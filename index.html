@@ -546,7 +546,7 @@
       typing.remove();
       state.history.pop();             // devolvemos el mensaje para reintentar
       input.value = text;
-      addBubble('No pude obtener respuesta. Tu mensaje sigue en el cuadro; intenta enviarlo de nuevo.', 'err');
+      addBubble('No pude obtener respuesta. Tu mensaje sigue en el cuadro; intenta enviarlo de nuevo.\nDetalle técnico: ' + e.message, 'err');
     } finally {
       state.busy = false;
       $('btnEnviar').disabled = false;
