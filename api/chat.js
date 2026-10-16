@@ -170,8 +170,28 @@ Formato exacto:
 }
 
 module.exports = async function handler(req, res) {
+  // Diagnóstico: abre /api/chat en el navegador (y /api/chat?test=1 para probar la IA)
+  if (req.method === 'GET') {
+    const info = {
+      funcionActiva: true,
+      claveConfigurada: Boolean(process.env.ANTHROPIC_API_KEY),
+      modeloChat: CHAT_MODEL,
+      modeloAnalisis: ANALYSIS_MODEL
+    };
+    if (req.query && req.query.test === '1' && info.claveConfigurada) {
+      for (const [k, model] of [['pruebaChat', CHAT_MODEL], ['pruebaAnalisis', ANALYSIS_MODEL]]) {
+        try {
+          await callClaude({ model, system: 'Responde solo: ok', messages: [{ role: 'user', content: 'hola' }], max_tokens: 5 });
+          info[k] = 'OK';
+        } catch (e) {
+          info[k] = 'ERROR: ' + String(e.message).slice(0, 400);
+        }
+      }
+    }
+    return res.status(200).json(info);
+  }
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
+    res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: 'Método no permitido' });
   }
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -210,5 +230,4 @@ module.exports = async function handler(req, res) {
     console.error(err);
     return res.status(500).json({ error: 'No se pudo procesar la solicitud: ' + String(err.message || err).slice(0, 300) });
   }
-};
 };
