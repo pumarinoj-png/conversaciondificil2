@@ -22,7 +22,7 @@ const ATTITUDES = {
 
 const clip = (s, n = 1500) => String(s ?? '').slice(0, n);
 
-async function callClaude({ model, system, messages, max_tokens, temperature }) {
+async function callClaude({ model, system, messages, max_tokens }) {
   const r = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -30,7 +30,7 @@ async function callClaude({ model, system, messages, max_tokens, temperature }) 
       'x-api-key': process.env.ANTHROPIC_API_KEY,
       'anthropic-version': '2023-06-01'
     },
-    body: JSON.stringify({ model, system, messages, max_tokens, temperature })
+    body: JSON.stringify({ model, system, messages, max_tokens })
   });
   if (!r.ok) {
     const detail = await r.text();
@@ -91,8 +91,7 @@ PEDIDO/ACUERDO: ${caso.pedido}`;
     model: ANALYSIS_MODEL,
     system,
     messages: [{ role: 'user', content: user }],
-    max_tokens: 800,
-    temperature: 0.2
+    max_tokens: 800
   });
   return extractJSON(text);
 }
@@ -124,8 +123,7 @@ REGLAS:
     model: CHAT_MODEL,
     system,
     messages,
-    max_tokens: 400,
-    temperature: 0.9
+    max_tokens: 400
   });
 }
 
@@ -166,8 +164,7 @@ Formato exacto:
     model: ANALYSIS_MODEL,
     system,
     messages: [{ role: 'user', content: `Transcripción de la conversación:\n\n${transcript}` }],
-    max_tokens: 1800,
-    temperature: 0.3
+    max_tokens: 1800
   });
   return extractJSON(text);
 }
@@ -211,6 +208,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Modo no válido' });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'No se pudo procesar la solicitud. Intenta nuevamente.' });
+    return res.status(500).json({ error: 'No se pudo procesar la solicitud: ' + String(err.message || err).slice(0, 300) });
   }
+};
 };
