@@ -22,7 +22,7 @@ const ATTITUDES = {
 
 const clip = (s, n = 1500) => String(s ?? '').slice(0, n);
 
-async function callClaude({ model, system, messages, max_tokens }) {
+async function callClaude({ model, system, messages, max_tokens, trimIncomplete = false }) {
   const r = await fetch(API_URL, {
     method: 'POST',
     headers: {
@@ -37,7 +37,12 @@ async function callClaude({ model, system, messages, max_tokens }) {
     throw new Error(`Anthropic API ${r.status}: ${detail.slice(0, 300)}`);
   }
   const data = await r.json();
-  return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+  let text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+  if (trimIncomplete && data.stop_reason === 'max_tokens') {
+    const m = text.match(/^[\s\S]*[.!?…»")]/);
+    if (m) text = m[0].trim();
+  }
+  return text;
 }
 
 function extractJSON(text) {
@@ -91,7 +96,7 @@ PEDIDO/ACUERDO: ${caso.pedido}`;
     model: ANALYSIS_MODEL,
     system,
     messages: [{ role: 'user', content: user }],
-    max_tokens: 800
+    max_tokens: 2000
   });
   return extractJSON(text);
 }
@@ -123,7 +128,8 @@ REGLAS:
     model: CHAT_MODEL,
     system,
     messages,
-    max_tokens: 400
+    max_tokens: 1500,
+    trimIncomplete: true
   });
 }
 
@@ -164,7 +170,7 @@ Formato exacto:
     model: ANALYSIS_MODEL,
     system,
     messages: [{ role: 'user', content: `Transcripción de la conversación:\n\n${transcript}` }],
-    max_tokens: 1800
+    max_tokens: 4000
   });
   return extractJSON(text);
 }
